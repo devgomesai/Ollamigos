@@ -1,0 +1,24 @@
+research_task:
+  description: >
+    Conduct an in-depth research study on {topic}. Gather the most recent, credible,
+    and insightful information available. Explore emerging trends,
+    innovations, key findings, and any relevant breakthroughs or controversies
+    surrounding {topic}.
+  expected_output: >
+    A concise list of 10 bullet points summarizing the most important, up-to-date,
+    and relevant information about {topic}. Each point should highlight a unique aspect
+    or discovery.
+  agent: researcher
+
+
+reporting_task:
+  description: >
+    Review and analyze the research context provided by the researcher. Expand each
+    bullet point into a comprehensive section of a professional report. Each section
+    should include background, analysis, and implications related to {topic}, with
+    a focus on clarity, structure, and depth.
+  expected_output: >
+    A fully developed report written in clear, well-structured markdown format.
+    Each major topic should be presented as its own section with detailed discussion
+    and insights. Avoid using code block formatting (no ```).
+  agent: reporting_analyst

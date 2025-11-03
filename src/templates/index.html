@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Cloud - Research Assistant</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, #0f0f0f 0%, #0a1a1f 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            padding-top: 40px;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        html {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .container {
+            background: transparent;
+            border-radius: 12px;
+            box-shadow: none;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            border: none;
+            min-height: auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 20px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .header-text h1 {
+            font-size: 2em;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header-text p {
+            color: #b0b0b0;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .header-meta {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .meta-item {
+            font-size: 0.9em;
+            color: #b0b0b0;
+        }
+
+        .meta-label {
+            color: #666;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .meta-value {
+            color: #00d4ff;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .query-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .query-input {
+            flex: 1;
+            padding: 15px;
+            background: #0f2838;
+            border: 2px solid #1a3a4a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+            background: #1a3a4a;
+        }
+
+        .query-input::placeholder {
+            color: #666;
+        }
+
+        .btn-analyze {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-analyze:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-analyze:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #1a3a4a;
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #00d4ff;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .response-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .response-section.active {
+            display: block;
+        }
+
+        .response-header {
+            font-size: 1.2em;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .response-header::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #00d4ff;
+            border-radius: 2px;
+        }
+
+        .download-section {
+            background: linear-gradient(135deg, #0f2838 0%, #1a3a4a 100%);
+            border: 2px solid #00d4ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .download-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .download-section-title {
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-section-title::before {
+            content: '📁';
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: #00d4ff;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapse-btn:hover {
+            color: #66e6ff;
+        }
+
+        .download-content {
+            margin-top: 15px;
+            transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+            max-height: 500px;
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        .download-content.collapsed {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+            overflow: hidden;
+            visibility: hidden;
+        }
+
+        .json-viewer {
+            background: #0f2838;
+            border: 1px solid #1a3a4a;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .json-line {
+            display: block;
+            padding: 2px 0;
+        }
+
+        .json-line:hover {
+            background: rgba(0, 212, 255, 0.1);
+            padding-left: 5px;
+            margin-left: -5px;
+            border-left: 2px solid #00d4ff;
+        }
+
+        .json-key {
+            color: #00d4ff;
+        }
+
+        .json-string {
+            color: #66e6ff;
+        }
+
+        .json-number {
+            color: #ffa657;
+        }
+
+        .json-boolean {
+            color: #00d4ff;
+        }
+
+        .json-null {
+            color: #999;
+        }
+
+        .error-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .error-section.active {
+            display: block;
+        }
+
+        .error-message {
+            background: #0a1519;
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            padding: 20px;
+            color: #00d4ff;
+        }
+
+        .error-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .scroll-indicator {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .api-status {
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 20px;
+            border: 1px solid #1a3a4a;
+            border-radius: 6px;
+            background: #0a1519;
+        }
+
+        .api-status.connected {
+            color: #00d4ff;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .api-status.disconnected {
+            color: #666;
+            border-color: #2a1a1a;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            .header-top {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-logo-container {
+                width: 100%;
+            }
+
+            .header-text h1 {
+                font-size: 1.6em;
+            }
+
+            .header-meta {
+                text-align: left;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .btn-analyze {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <div class="header-info">
+                    <div class="header-logo-container">
+                        <img src="../static/crew_ai.png" alt="CrewAI" class="header-logo">
+                        <span style="color: #00d4ff; font-size: 1.5em;">×</span>
+                        <img src="../static/ollama.png" alt="Ollama" class="header-logo">
+                    </div>
+                    <div class="header-text">
+                        <h1>Ollamigos</h1>
+                        <p>AI-powered research assistant with CrewAI and ollama.</p>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div class="meta-item">
+                        <div class="meta-label">API Version</div>
+                        <div class="meta-value">1.0.0</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-label">Status</div>
+                        <div class="meta-value" id="statusValue" style="color: #ff6666;">● Checking...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="apiStatus" class="api-status disconnected">
+            ⚪ Checking API connection...
+        </div>
+
+        <div class="query-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="query-input" 
+                    id="queryInput" 
+                    placeholder="Enter your research topic (e.g., 'Latest AI developments')"
+                    autocomplete="off"
+                >
+                <button class="btn-analyze" id="analyzeBtn" onclick="analyzeResearch()">
+                    <span>Research</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loadingDiv">
+            <div class="spinner"></div>
+            <div class="loading-text">Researching your topic...</div>
+        </div>
+
+        <div class="response-section" id="responseSection">
+            <div class="response-header">Research Results</div>
+            <div class="json-viewer" id="jsonViewer"></div>
+            <div class="scroll-indicator">Scroll to see more ↓</div>
+        </div>
+
+        <div class="error-section" id="errorSection">
+            <div class="error-message">
+                <div class="error-title">⚠️ Error</div>
+                <div id="errorText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const queryInput = document.getElementById('queryInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const responseSection = document.getElementById('responseSection');
+        const errorSection = document.getElementById('errorSection');
+        const jsonViewer = document.getElementById('jsonViewer');
+        const errorText = document.getElementById('errorText');
+        const apiStatusDiv = document.getElementById('apiStatus');
+        const statusValue = document.getElementById('statusValue');
+
+        // Check API connection on load
+        window.addEventListener('load', checkAPIConnection);
+
+        async function checkAPIConnection() {
+            try {
+                const response = await fetch('/health');
+                if (response.ok) {
+                    apiStatusDiv.classList.remove('disconnected');
+                    apiStatusDiv.classList.add('connected');
+                    apiStatusDiv.textContent = '🟢 API Connected';
+                    statusValue.textContent = '● Active';
+                    statusValue.style.color = '#00d4ff';
+                } else {
+                    showAPIError();
+                }
+            } catch (error) {
+                showAPIError();
+            }
+        }
+
+        function showAPIError() {
+            apiStatusDiv.classList.add('disconnected');
+            apiStatusDiv.classList.remove('connected');
+            apiStatusDiv.textContent = '🔴 API Disconnected - Ensure FastAPI is running';
+            statusValue.textContent = '● Offline';
+            statusValue.style.color = '#ff6666';
+        }
+
+        // Allow Enter key to submit
+        queryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !analyzeBtn.disabled) {
+                analyzeResearch();
+            }
+        });
+
+        async function analyzeResearch() {
+            const topic = queryInput.value.trim();
+
+            if (!topic) {
+                showError('Please enter a research topic');
+                return;
+            }
+
+            showLoading();
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/kickoff', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ topic: topic })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResponse(data);
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function showLoading() {
+            loadingDiv.classList.add('active');
+            responseSection.classList.remove('active');
+            errorSection.classList.remove('active');
+        }
+
+        function displayResponse(data) {
+            loadingDiv.classList.remove('active');
+            errorSection.classList.remove('active');
+            responseSection.classList.add('active');
+            jsonViewer.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+        }
+
+        function showError(message) {
+            loadingDiv.classList.remove('active');
+            responseSection.classList.remove('active');
+            errorSection.classList.add('active');
+            errorText.textContent = message;
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            let highlighted = json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return `<span class="${cls}">${match}</span>`;
+            });
+            
+            return highlighted.split('\n').map(line => {
+                const leadingSpaces = line.match(/^ */)[0].length;
+                const indentLevel = Math.floor(leadingSpaces / 2);
+                const content = line.trim();
+                
+                if (!content) return '<div class="json-line"></div>';
+                
+                return `<div class="json-line"><span style="margin-left: ${indentLevel * 1.2}em;"></span>${content}</div>`;
+            }).join('');
+        }
+
+        // Periodically check API connection
+        setInterval(checkAPIConnection, 30000);
+    </script>
+</body>
+</html>
